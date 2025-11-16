@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Quantization Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(25, 31, 52, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .powered-by {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(139, 92, 246, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #c4b5fd;
+        }
+
+        .powered-by::before {
+            content: "●";
+            color: #8b5cf6;
+            margin-right: 8px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #e879f9, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        .metric-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prompt-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .prompt-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .prompt-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #8b5cf6, #e879f9);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .prompt-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .quantization-list {
+            margin-bottom: 30px;
+        }
+
+        .quantization-item {
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quantization-item::before {
+            content: "•";
+            color: #8b5cf6;
+        }
+
+        .company-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .companies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .company-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .company-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .company-btn span {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .aapl { background: #1c1c1e; }
+        .msft { background: #0078d4; }
+        .googl { background: #ea4335; }
+        .amzn { background: #ff9900; }
+        .tsla { background: #e82127; }
+        .nvda { background: #76b900; }
+        .meta { background: #0668e1; }
+        .nflx { background: #e50914; }
+        .jpm { background: #0c2340; }
+        .v { background: #1a1f71; }
+
+        .custom-ticker {
+            margin-bottom: 20px;
+        }
+
+        .ticker-input-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        .ticker-input {
+            flex: 1;
+            padding: 14px 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .ticker-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .ticker-input::placeholder {
+            color: #64748b;
+        }
+
+        .fetch-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fetch-btn:hover {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .fetch-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 16px;
+        }
+
+        .stock-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .stock-ticker {
+            font-size: 32px;
+            font-weight: bold;
+            color: #8b5cf6;
+            margin-bottom: 10px;
+        }
+
+        .stock-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stock-metric-card {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stock-metric-label {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stock-metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .open { color: #10b981; }
+        .close { color: #3b82f6; }
+        .high { color: #8b5cf6; }
+        .low { color: #ef4444; }
+        .volume { color: #f59e0b; }
+
+        .quantization-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .result-card {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .result-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .result-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-metric-label {
+            color: #94a3b8;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-metric-value {
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 20px;
+            border: 3px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #8b5cf6;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .companies-grid {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="powered-by">Powered by Microsoft Phi-4-mini-instruct</span>
+            <h1>LLM Quantization Dashboard</h1>
+            <p class="subtitle">
+                Compare different quantization strategies for stock summary generation. Optimize<br>
+                your models for production with real-time performance metrics.
+            </p>
+            <div class="metrics">
+                <div class="metric">
+                    <span class="metric-icon">⚡</span>
+                    <span>Latency</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-icon">💾</span>
+                    <span>Memory</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-icon">#</span>
+                    <span>Tokens</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-icon">🎯</span>
+                    <span>ROUGE-L</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-section">
+            <div class="prompt-header">
+                <div class="prompt-icon">📊</div>
+                <h2 class="prompt-title">Enter Your Prompt</h2>
+            </div>
+
+            <div class="quantization-list">
+                <h3 class="section-title">Quantization Strategies:</h3>
+                <div class="quantization-item"><strong>FP16:</strong> Full Precision 16-bit</div>
+                <div class="quantization-item"><strong>INT8:</strong> 8-bit Integer Quantization</div>
+                <div class="quantization-item"><strong>INT4:</strong> 4-bit NormalFloat Quantization</div>
+                <div class="quantization-item"><strong>Hybrid:</strong> Hybrid 4-bit/FP16 Quantization</div>
+            </div>
+
+            <div class="company-section">
+                <h3 class="section-title">Popular Companies</h3>
+                <div class="companies-grid">
+                    <button class="company-btn aapl" onclick="selectTicker('AAPL')">
+                        AAPL<br><span>Apple</span>
+                    </button>
+                    <button class="company-btn msft" onclick="selectTicker('MSFT')">
+                        MSFT<br><span>Microsoft</span>
+                    </button>
+                    <button class="company-btn googl" onclick="selectTicker('GOOGL')">
+                        GOOGL<br><span>Google</span>
+                    </button>
+                    <button class="company-btn amzn" onclick="selectTicker('AMZN')">
+                        AMZN<br><span>Amazon</span>
+                    </button>
+                    <button class="company-btn tsla" onclick="selectTicker('TSLA')">
+                        TSLA<br><span>Tesla</span>
+                    </button>
+                    <button class="company-btn nvda" onclick="selectTicker('NVDA')">
+                        NVDA<br><span>NVIDIA</span>
+                    </button>
+                    <button class="company-btn meta" onclick="selectTicker('META')">
+                        META<br><span>Meta</span>
+                    </button>
+                    <button class="company-btn nflx" onclick="selectTicker('NFLX')">
+                        NFLX<br><span>Netflix</span>
+                    </button>
+                    <button class="company-btn jpm" onclick="selectTicker('JPM')">
+                        JPM<br><span>JPMorgan</span>
+                    </button>
+                    <button class="company-btn v" onclick="selectTicker('V')">
+                        V<br><span>Visa</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="custom-ticker">
+                <h3 class="section-title">Or Enter Custom Ticker</h3>
+                <div class="ticker-input-wrapper">
+                    <input type="text" class="ticker-input" id="tickerInput" placeholder="e.g., AAPL, TSLA, MSFT">
+                    <button class="fetch-btn" id="fetchBtn" onclick="fetchData()">Fetch Data</button>
+                </div>
+            </div>
+
+            <div id="errorMessage"></div>
+        </div>
+
+        <div class="results-section" id="results">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        // Default metrics data (fallback)
+        const defaultMetrics = {
+            'FP16': {
+                'Latency': 2.45,
+                'Memory': 512.3,
+                'Tokens': 156,
+                'ROUGE-L': 1.0,
+            },
+            'INT8': {
+                'Latency': 1.82,
+                'Memory': 256.7,
+                'Tokens': 154,
+                'ROUGE-L': 0.965,
+            },
+            'INT4': {
+                'Latency': 1.23,
+                'Memory': 128.4,
+                'Tokens': 152,
+                'ROUGE-L': 0.912,
+            },
+            'Hybrid': {
+                'Latency': 1.65,
+                'Memory': 192.5,
+                'Tokens': 153,
+                'ROUGE-L': 0.943,
+            },
+        };
+
+        function selectTicker(ticker) {
+            document.getElementById('tickerInput').value = ticker;
+        }
+
+        async function fetchData() {
+            const ticker = document.getElementById('tickerInput').value.trim();
+            const fetchBtn = document.getElementById('fetchBtn');
+            const errorDiv = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('results');
+            
+            if (!ticker) {
+                showError('Please enter a stock ticker');
+                return;
+            }
+
+            // Clear previous error
+            errorDiv.innerHTML = '';
+            
+            // Show loading
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Loading...';
+            
+            // Show results section with loading state
+            resultsSection.style.display = 'block';
+            resultsSection.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing ${ticker.toUpperCase()} with different quantization methods...</p>
+                    <p id="progressText">Starting analysis...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ticker: ticker.toUpperCase() }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to analyze stock');
+                }
+
+                // Read the streaming response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let stockData = null;
+                let results = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(line => line.trim());
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                
+                                if (data.type === 'progress') {
+                                    document.getElementById('progressText').textContent =
+                                        `Processing ${data.model}... (${data.progress}%)`;
+                                    document.getElementById('progressBar').style.width =
+                                        `${data.progress}%`;
+                                } else if (data.type === 'stock_data') {
+                                    stockData = data.data;
+                                } else if (data.type === 'results') {
+                                    results = data.data;
+                                    // Show results when we have both stock data and results
+                                    if (stockData && results) {
+                                        showResultsFromBackend(stockData, results);
+                                    }
+                                } else if (data.type === 'error') {
+                                    throw new Error(data.message);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing data:', e);
+                            }
+                        }
+                    }
+                }
+
+                // If no results received, show error
+                if (!results) {
+                    throw new Error('No results received from backend');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Failed to connect to backend. Make sure the Python server is running on port 5000.');
+                
+                // Show default data as fallback
+                setTimeout(() => {
+                    showResults(ticker.toUpperCase(), defaultMetrics);
+                }, 1000);
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Fetch Data';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showResults(ticker, metrics) {
+            const resultsSection = document.getElementById('results');
+            
+            // Generate random stock data for demo
+            const stockData = {
+                ticker: ticker,
+                open: (150 + Math.random() * 50).toFixed(2),
+                close: (150 + Math.random() * 50).toFixed(2),
+                high: (180 + Math.random() * 20).toFixed(2),
+                low: (140 + Math.random() * 10).toFixed(2),
+                volume: Math.floor(45000000 + Math.random() * 10000000)
+            };
+
+            showResultsFromBackend(stockData, metrics);
+        }
+
+        function showResultsFromBackend(stockData, metrics) {
+            const resultsSection = document.getElementById('results');
+            
+            let resultsHTML = `
+                <div class="stock-info">
+                    <div class="stock-ticker">${stockData.ticker}</div>
+                    <div class="stock-metrics">
+                        <div class="stock-metric-card">
+                            <div class="stock-metric-label">Open</div>
+                            <div class="stock-metric-value open">$${parseFloat(stockData.open).toFixed(2)}</div>
+                        </div>
+                        <div class="stock-metric-card">
+                            <div class="stock-metric-label">Close</div>
+                            <div class="stock-metric-value close">$${parseFloat(stockData.close).toFixed(2)}</div>
+                        </div>
+                        <div class="stock-metric-card">
+                            <div class="stock-metric-label">High</div>
+                            <div class="stock-metric-value high">$${parseFloat(stockData.high).toFixed(2)}</div>
+                        </div>
+                        <div class="stock-metric-card">
+                            <div class="stock-metric-label">Low</div>
+                            <div class="stock-metric-value low">$${parseFloat(stockData.low).toFixed(2)}</div>
+                        </div>
+                        <div class="stock-metric-card">
+                            <div class="stock-metric-label">Volume</div>
+                            <div class="stock-metric-value volume">${(stockData.volume / 1000000).toFixed(2)}M</div>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="section-title">Quantization Results</h3>
+                <div class="quantization-results">
+            `;
+
+            for (const [method, data] of Object.entries(metrics)) {
+                // Skip the Dynamic INT8 entry entirely (we don't show this result box)
+                if (/^Dynamic\s*INT8$/i.test(method)) continue;
+                resultsHTML += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">${method}</div>
+                            <div class="result-status ${data ? 'status-active' : 'status-failed'}">
+                                ${data ? 'Active' : 'Failed'}
+                            </div>
+                        </div>
+                        ${data ? `
+                            <div class="result-metrics">
+                                <div class="result-metric">
+                                    <div class="result-metric-label">⚡ Latency</div>
+                                    <div class="result-metric-value" style="color: #8b5cf6">${data.Latency}s</div>
+                                </div>
+                                <div class="result-metric">
+                                    <div class="result-metric-label">💾 Memory</div>
+                                    <div class="result-metric-value" style="color: #ec4899">${data.Memory}MB</div>
+                                </div>
+                                <div class="result-metric">
+                                    <div class="result-metric-label"># Tokens</div>
+                                    <div class="result-metric-value" style="color: #3b82f6">${data.Tokens}</div>
+                                </div>
+                                <div class="result-metric">
+                                    <div class="result-metric-label">🎯 ROUGE-L</div>
+                                    <div class="result-metric-value" style="color: #10b981">${(data['ROUGE-L'] * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        ` : '<p style="color: #94a3b8; text-align: center; margin-top: 10px;">Failed to load</p>'}
+                    </div>
+                `;
+            }
+
+            resultsHTML += '</div>';
+            resultsSection.innerHTML = resultsHTML;
+        }
+
+        // Add enter key support
+        document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchData();
+            }
+        });
+
+        // Show default metrics on page load
+        window.addEventListener('load', function() {
+            // You can uncomment the following line to show default results on load
+            // showResults('DEMO', defaultMetrics);
+        });
+    </script>
+</body>
+</html>

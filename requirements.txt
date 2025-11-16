@@ -1,0 +1,7 @@
+fastapi==0.115.2
+uvicorn[standard]==0.31.1
+python-dotenv
+psutil
+transformers>=4.46.0
+accelerate>=0.34.2
+bitsandbytes
